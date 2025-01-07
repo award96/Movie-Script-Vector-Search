@@ -62,7 +62,7 @@ if __name__ == "__main__":
     model.eval()
     print("Starting")
     df = pl.read_parquet(
-        "data/out/internet-movie-script.parquet",
+        "data/out/movie-script-dataset.parquet",
         columns=["script"]
     )
 
