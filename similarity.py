@@ -2,14 +2,12 @@ import polars as pl
 import torch
 from IPython.display import display
 
-
-def display_top_n_matches(
+def return_matches(
     movie_title: str,
     embeddings: torch.Tensor,
     movie_dataset: pl.DataFrame,
-    n: int = 5,
     metric: str = "Distance"
-) -> None:
+) -> pl.DataFrame:
     index_in_df: int = get_index_in_df_from_title(movie_title, movie_dataset)
     similarity_name_value_pairs: dict = calculate_similarity_pairs_for_index(
         embeddings,
@@ -19,8 +17,18 @@ def display_top_n_matches(
         similarity_name_value_pairs,
         movie_dataset
     ).filter(pl.col("index") != index_in_df).sort(pl.col(metric)) # omit self similarity
+    return df
+
+def display_top_n_matches(
+    movie_title: str,
+    embeddings: torch.Tensor,
+    movie_dataset: pl.DataFrame,
+    n: int = 5,
+    metric: str = "Distance"
+) -> None:
+    df = return_matches(movie_title, embeddings, movie_dataset, metric)
     print(movie_title)
-    display_similarity_correlation(df, similarity_name_value_pairs.keys())
+    display_similarity_correlation(df, df.select(pl.col(pl.Float32, pl.Float64)).columns)
     display(df[:n])
 
 
