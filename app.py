@@ -1,22 +1,34 @@
 from flask import Flask, render_template_string, request, jsonify
 import polars as pl
 import plotly.express as px
-import pandas as pd
+import torch
 import similarity
 import json
 
-# Load Data
-embeddings = similarity.load_embedding_tensors()
-movie_dataset = similarity.load_movie_dataset()
+# load the movie dataset
+# omitting the actual scripts
+movie_dataset = pl.scan_parquet("data/out/movie-script-dataset.parquet")\
+    .with_columns(
+        script_length = pl.col("script").str.len_chars()
+    ).select(pl.col("index", "movie_title", 
+        "genre", "script_length", "year"))\
+    .collect()
 
-# Convert polars DF to a simple list of titles
-# NOTE: .select(...).shuffle() returns a DataFrame with one column; 
-# you’ll need to access it as a Series then convert to a Python list.
-df_titles = movie_dataset.select(pl.col("movie_title").shuffle())
-titles_list = df_titles["movie_title"].to_list()
+# since there are only 110 movie script embeddings
+# we can easily pre-load all 110^2 comparisons
+# for Distance, Dotproduct, and Cosine
+# {"Distance": torch.Tensor of shape (n_movies, n_movies) ...}
+similarity_name_value_pairs: dict[torch.Tensor] = \
+    similarity.calculate_all_similarity_pairs(
+        torch.load("data/out/scripts-embedded.pt", weights_only=True)
+    )
 
-# Optionally, transform into the {id, text} shape if needed by select2
-# (Otherwise, a plain list of strings can also work depending on your config)
+# randomly sorted titles for
+# user to select from
+titles_list = movie_dataset.select(pl.col("movie_title").shuffle())\
+    ["movie_title"].to_list()
+
+# json format
 movie_titles = [{"id": t, "text": t} for t in titles_list]
 
 metric = "Distance"
@@ -32,14 +44,14 @@ def index():
     html_template = """
     <html>
         <head>
-            <title>Movie Script Similarity</title>
+            <title>Movie Script Embedded Vector Similarity</title>
             <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"/>
         </head>
         <body>
-            <h1 style="text-align: center;">Movie Script Similarity</h1>
+            <h1 style="text-align: center;">Movie Script Embedded Vector Similarity</h1>
             <div style="margin: 20px; text-align: center;">
                 <label for="movie-select">Choose a Movie:</label>
                 <select id="movie-select" style="width: 300px;"></select>
@@ -47,7 +59,7 @@ def index():
             </div>
             <h2>Similarity Metrics Correlation</h2>
             <div id="correlation"></div>
-            <h2>Top Nearest Neighbors</h2>
+            <h2>Nearest Neighbors</h2>
             <div id="neighbors"></div>
 
             <script>
@@ -100,12 +112,14 @@ def visualize():
         return jsonify({"error": "No movie title provided"}), 400
 
     # Recalculate data based on selected movie
-    neighbors_df = similarity.return_matches(movie_title, embeddings, movie_dataset, metric)
+    neighbors_df = similarity.return_matches(
+        movie_title, 
+        similarity_name_value_pairs, 
+        movie_dataset, 
+        metric
+    )
 
     correlation_df = neighbors_df.select(pl.col(pl.Float32, pl.Float64)).corr()
-
-    neighbors_df = neighbors_df.to_pandas()
-    correlation_df = correlation_df.to_pandas()
 
     # Create correlation heatmap
     fig_corr = px.imshow(
@@ -115,7 +129,7 @@ def visualize():
         y=["Dotproduct", "Cosine", "Distance"],
         color_continuous_scale="Portland"
     )
-    fig_corr.update_layout(title="Similarity Metrics Correlation Heatmap")
+    fig_corr.update_layout(title=f"Similarity Metrics Correlation Heatmap\nFor {movie_title}")
 
     # Create scatter plot for neighbors
     fig_neighbors = px.scatter(
@@ -129,7 +143,7 @@ def visualize():
         hover_data=["Dotproduct", "Cosine", "Distance", "movie_title"]
     )
     fig_neighbors.update_traces(textposition='top center')
-    fig_neighbors.update_layout(title="Top N Nearest Neighbors Visualization")
+    fig_neighbors.update_layout(title=f"Nearest Neighbors to {movie_title}")
 
     return jsonify({
         "corr_plot": fig_corr.to_json(),

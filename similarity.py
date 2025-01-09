@@ -4,7 +4,8 @@ from IPython.display import display
 
 def return_matches(
     movie_title: str,
-    embeddings: torch.Tensor,
+    similarity_name_value_pairs: dict, # dict mapping "Distance": torch.Tensor 
+    #                                               (n_movies, n_movies) ...
     movie_dataset: pl.DataFrame,
     metric: str = "Distance"
 ) -> pl.DataFrame:
@@ -13,8 +14,10 @@ def return_matches(
 
     Args:
         movie_title (str): The movie script embedding to rank similarity against.
-        embeddings (torch.Tensor): The script embeddings of shape 
-            (n_movies, hidden_size) with the same index as movie_dataset.
+        similarity_name_value_pairs (dict[str: torch.Tensor]): A dictionary mapping
+            similarity metrics (ie "Distance") to torch.Tensors of shape
+            (n_movies, n_movies) which are all such comparisons of that metric.
+            These tensors should have the same index as movie_dataset.
         movie_dataset (pl.DataFrame): The movie names, scripts, years, etc
             with the same index as embeddings.
         metric (str): The similarity metric to rank on. One of "Distance", 
@@ -24,16 +27,12 @@ def return_matches(
     """
     # we will use index as PK
     index_in_df: int = get_index_in_df_from_title(movie_title, movie_dataset)
-    # dictionary mapping metric name to torch array of shape (n_movies,)
-    similarity_name_value_pairs: dict = calculate_similarity_pairs_for_index(
-        embeddings,
-        index_in_df
-    )
     # create a dataframe where the columns are similarity metrics
     # and the rows are other movies
     df = create_similarity_df(
         similarity_name_value_pairs,
-        movie_dataset
+        movie_dataset,
+        index_in_df
     ).filter(
         pl.col("index") != index_in_df # omit self similarity
     ).sort(
@@ -117,16 +116,20 @@ def calculate_all_similarity_pairs(
 
 def create_similarity_df(
     similarity_name_value_pairs: dict,
-    movie_dataset: pl.DataFrame
+    movie_dataset: pl.DataFrame,
+    index: int
 ) -> pl.DataFrame:
-    """Using the dictionary keys as column names, and values
+    """Using the dictionary keys as column names, and values at index
     as columns, create a dataframe, join it to the movie dataset
     on the index, and return it.
 
     Args:
-        similarity_name_value_pairs (dict): The similarity of the scripts
-            where the key is the column name and the value is a torch array
-            of shape (n_movies,)
+        similarity_name_value_pairs (dict[str: torch.Tensor]): A dictionary mapping
+            similarity metrics (ie "Distance") to torch.Tensors of shape
+            (n_movies, n_movies) which are all such comparisons of that metric.
+            These tensors should have the same index as movie_dataset. Use 
+            torch.unsqueeze(0) and index=0 to make this function compatible 
+            with an array of shape (n_movies,).
         movie_dataset (pl.DataFrame): The movie data with the same index as the
             torch arrays in similarity_name_value_pairs.values().
     Returns:
@@ -135,8 +138,8 @@ def create_similarity_df(
 
     return pl.DataFrame(
         {
-            measure_name: torch_array.numpy() for \
-            measure_name, torch_array in similarity_name_value_pairs.items()
+            measure_name: torch_comparison_tensor[index].numpy() for \
+            measure_name, torch_comparison_tensor in similarity_name_value_pairs.items()
         }
     ).with_row_index()\
         .join(
@@ -196,12 +199,13 @@ def load_movie_dataset() -> pl.DataFrame:
 if __name__ == "__main__":
     embeddings = load_embedding_tensors()
     movie_data = load_movie_dataset()
-    display_top_n_matches(
-        movie_data.sample(1)[0, "movie_title"],
-        embeddings,
-        movie_data,
-        n=5
-    )
+    similarity_name_value_pairs = calculate_all_similarity_pairs(embeddings)
+    rnd_movie = movie_data.sample(1)[0, "movie_title"]
+    print(rnd_movie)
     display(
-        calculate_all_similarity_pairs(embeddings)
+        return_matches(
+            rnd_movie,
+            similarity_name_value_pairs,
+            movie_data
+        )
     )
