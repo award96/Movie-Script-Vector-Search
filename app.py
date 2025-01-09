@@ -113,7 +113,7 @@ def visualize():
         labels=dict(x="Metric", y="Metric", color="Correlation"),
         x=["Dotproduct", "Cosine", "Distance"],
         y=["Dotproduct", "Cosine", "Distance"],
-        color_continuous_scale="YlOrRd"
+        color_continuous_scale="Portland"
     )
     fig_corr.update_layout(title="Similarity Metrics Correlation Heatmap")
 
