@@ -111,9 +111,9 @@ def visualize():
     fig_corr = px.imshow(
         correlation_df,
         labels=dict(x="Metric", y="Metric", color="Correlation"),
-        x=["Dotproduct", "Cosine similarity", "Distance"],
-        y=["Dotproduct", "Cosine similarity", "Distance"],
-        color_continuous_scale="RdBu"
+        x=["Dotproduct", "Cosine", "Distance"],
+        y=["Dotproduct", "Cosine", "Distance"],
+        color_continuous_scale="YlOrRd"
     )
     fig_corr.update_layout(title="Similarity Metrics Correlation Heatmap")
 
@@ -123,10 +123,10 @@ def visualize():
         x="Distance",
         y="Dotproduct",
         text="movie_title",
-        color="Cosine similarity",
+        color="Cosine",
         color_continuous_scale="Blues",
         size="Dotproduct",
-        hover_data=["index", "Dotproduct", "Cosine similarity", "Distance", "movie_title"]
+        hover_data=["Dotproduct", "Cosine", "Distance", "movie_title"]
     )
     fig_neighbors.update_traces(textposition='top center')
     fig_neighbors.update_layout(title="Top N Nearest Neighbors Visualization")
