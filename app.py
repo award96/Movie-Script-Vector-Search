@@ -1,8 +1,10 @@
 from flask import Flask, render_template_string, request, jsonify
 import polars as pl
 import plotly.express as px
+from plotly.utils import PlotlyJSONEncoder
 import torch
-import similarity
+from . import vector_similarity
+from . import make_other_plots
 import json
 
 # load the movie dataset
@@ -15,13 +17,12 @@ movie_dataset = (
 )
 
 # There are only 110 movie script embeddings
+embeddings = torch.load("data/out/scripts-embedded.pt", weights_only=True)
 # so we can pre-load all 110^2 comparisons
 # for Distance, Dotproduct, and Cosine
 # {"Distance": torch.Tensor of shape (n_movies, n_movies) ...}
 similarity_name_value_pairs: dict[torch.Tensor] = \
-    similarity.calculate_all_similarity_pairs(
-        torch.load("data/out/scripts-embedded.pt", weights_only=True)
-    )
+    vector_similarity.calculate_all_similarity_pairs(embeddings)
 
 # randomly sorted titles for
 # user to select from
@@ -47,7 +48,7 @@ def index():
 
 # Route for Generating Visualizations
 @app.route('/visualize', methods=['POST'])
-def visualize():
+def make_plots():
     data = request.get_json()
     movie_title = data.get('movie_title')
 
@@ -55,7 +56,7 @@ def visualize():
         return jsonify({"error": "No movie title provided"}), 400
 
     # Get all movies sorted by distance
-    neighbors_df = similarity.return_matches(
+    neighbors_df = vector_similarity.return_matches(
         movie_title, 
         similarity_name_value_pairs, 
         movie_dataset, 
@@ -105,7 +106,11 @@ def other_plots():
     with open('html/other_plots.html', 'r') as file:
        html_template = file.read()
 
-    return render_template_string(html_template) # , movie_titles_json=movie_titles_json)
+    # List of Plotly Figure objects
+    plotly_figs = make_other_plots.make_all_visualizations(embeddings, movie_dataset)  
+    figs_json = [json.dumps(fig, cls=PlotlyJSONEncoder) for fig in plotly_figs]
+
+    return render_template_string(html_template, figs=figs_json)
 
 if __name__ == '__main__':
     app.run(debug=True)

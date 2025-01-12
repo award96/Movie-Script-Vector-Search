@@ -92,18 +92,34 @@
         </div>
 
         <script>
-            // On page load, render placeholders for the plots
-            $(document).ready(function() {
-                // Example: Render empty plots for placeholders
-                const placeholderPlot = {
-                    data: [],
-                    layout: { title: "This is a placeholder plot" }
-                };
+            // 'figs' is provided by the Flask render_template_string context
+            // It's a list of JSON-encoded Plotly figure objects.
+            var figs = {{ figs | safe }};
 
-                Plotly.newPlot('plot1', placeholderPlot.data, placeholderPlot.layout);
-                Plotly.newPlot('plot2', placeholderPlot.data, placeholderPlot.layout);
-                Plotly.newPlot('plot3', placeholderPlot.data, placeholderPlot.layout);
-                Plotly.newPlot('plot4', placeholderPlot.data, placeholderPlot.layout);
+            $(document).ready(function() {
+                // For each Plotly figure in 'figs', create a new container on the page
+                const container = $('#main-plots-container');
+                
+                figs.forEach(function(figStr, index) {
+                    // Unique ID for each plot
+                    var plotId = 'plot-' + index;
+
+                    // Create the outer container
+                    var plotContainer = $('<div>', { 'class': 'plot-container' });
+                    // Create a title for each plot
+                    var title = $('<h2>').text('Plot ' + (index + 1));
+                    // Create the actual div where the chart will be rendered
+                    var chartDiv = $('<div>', { 'id': plotId });
+
+                    // Append elements
+                    plotContainer.append(title);
+                    plotContainer.append(chartDiv);
+                    container.append(plotContainer);
+
+                    // Convert the string back to a Plotly figure object
+                    var parsedFig = JSON.parse(figStr);
+                    Plotly.newPlot(plotId, parsedFig.data, parsedFig.layout);
+                });
             });
         </script>
     </body>
