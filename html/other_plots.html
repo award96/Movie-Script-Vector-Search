@@ -58,6 +58,10 @@
                 text-align: left;
                 margin-bottom: 10px;
             }
+            .search-section {
+                margin: 50px auto;
+                text-align: center;
+            }
         </style>
     </head>
     <body>
@@ -71,11 +75,14 @@
         <!-- Main Content Area -->
         <div class="content">
             <h1>Movie Script Embedded Vector Similarity</h1>
-            
             <!-- Plot containers -->
             <div class="plot-container">
                 <h2>Plot 1: Placeholder Title</h2>
                 <div id="plot1"></div>
+            </div>
+            <div class="search-section" >
+                <label for="genre-select">Choose a Genre:</label>
+                <select id="genre-select" style="width:300px;"></select>
             </div>
             <div class="plot-container">
                 <h2>Plot 2: Placeholder Title</h2>
@@ -85,42 +92,74 @@
                 <h2>Plot 3: Placeholder Title</h2>
                 <div id="plot3"></div>
             </div>
-            <div class="plot-container">
-                <h2>Plot 4: Placeholder Title</h2>
-                <div id="plot4"></div>
-            </div>
         </div>
 
         <script>
-            // 'figs' is provided by the Flask render_template_string context
-            // It's a list of JSON-encoded Plotly figure objects.
+            // list of JSON-encoded Plotly figure objects
             var figs = {{ figs | safe }};
-
+    
             $(document).ready(function() {
-                // For each Plotly figure in 'figs', create a new container on the page
-                const container = $('#main-plots-container');
-                
-                figs.forEach(function(figStr, index) {
-                    // Unique ID for each plot
-                    var plotId = 'plot-' + index;
+                // Populate the original (static) plots
+                initOriginalPlots();
+    
+                // Load the available genres
+                $.ajax({
+                    url: "/get_genres",
+                    type: "GET",
+                    success: function(genres) {
+                        // genres is an array like ["Action","Comedy","Drama","Sci-Fi",...]
+                        let genreData = genres.map(function(g) {
+                            return { id: g, text: g };
+                        });
+                        $("#genre-select").select2({
+                            placeholder: "Select a genre",
+                            data: genreData
+                        });
+                        
+                        let comedyObj = genreData.find(item => item.id === "Comedy");
+                        if (comedyObj) {
+                            $("#genre-select").val(comedyObj.id).trigger("change");
+                        }
 
-                    // Create the outer container
-                    var plotContainer = $('<div>', { 'class': 'plot-container' });
-                    // Create a title for each plot
-                    var title = $('<h2>').text('Plot ' + (index + 1));
-                    // Create the actual div where the chart will be rendered
-                    var chartDiv = $('<div>', { 'id': plotId });
-
-                    // Append elements
-                    plotContainer.append(title);
-                    plotContainer.append(chartDiv);
-                    container.append(plotContainer);
-
-                    // Convert the string back to a Plotly figure object
-                    var parsedFig = JSON.parse(figStr);
-                    Plotly.newPlot(plotId, parsedFig.data, parsedFig.layout);
+                    }
+                });
+    
+                // Listen for changes in the dropdown -> update the genre-based plot
+                $("#genre-select").on("change", function() {
+                    const selectedGenre = $(this).val();
+                    if (!selectedGenre) return;
+    
+                    // Call /update_genre_plot
+                    $.ajax({
+                        url: "/update_genre_plot",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ "genre": selectedGenre }),
+                        success: function(updatedFigJson) {
+                            // updatedFigJson is a string, so parse it
+                            let updatedFig = JSON.parse(updatedFigJson);
+    
+                            // genre is plot2
+                            Plotly.newPlot("plot2", updatedFig.data, updatedFig.layout);
+                        }
+                    });
                 });
             });
+    
+    
+            function initOriginalPlots() {
+                // figs is a list of four Plotly figure objects in JSON-string form
+                let parsedFig1 = JSON.parse(figs[0]);
+                let parsedFig2 = JSON.parse(figs[1]);
+                let parsedFig3 = JSON.parse(figs[2]);
+                // If you only have 3 returned from make_other_plots, adapt accordingly:
+                // let parsedFig4 = JSON.parse(figs[3]);  // if 4 figs exist
+    
+                Plotly.newPlot("plot1", parsedFig1.data, parsedFig1.layout);
+                Plotly.newPlot("plot2", parsedFig2.data, parsedFig2.layout);
+                Plotly.newPlot("plot3", parsedFig3.data, parsedFig3.layout);
+                // Plotly.newPlot("plot4", parsedFig4.data, parsedFig4.layout);
+            }
         </script>
     </body>
 </html>

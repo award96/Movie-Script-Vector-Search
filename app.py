@@ -3,8 +3,8 @@ import polars as pl
 import plotly.express as px
 from plotly.utils import PlotlyJSONEncoder
 import torch
-from . import vector_similarity
-from . import make_other_plots
+import vector_similarity
+import make_other_plots
 import json
 
 # load the movie dataset
@@ -17,12 +17,14 @@ movie_dataset = (
 )
 
 # There are only 110 movie script embeddings
-embeddings = torch.load("data/out/scripts-embedded.pt", weights_only=True)
+embeddings: torch.Tensor = torch.load("data/out/scripts-embedded.pt", weights_only=True)
 # so we can pre-load all 110^2 comparisons
 # for Distance, Dotproduct, and Cosine
 # {"Distance": torch.Tensor of shape (n_movies, n_movies) ...}
 similarity_name_value_pairs: dict[torch.Tensor] = \
     vector_similarity.calculate_all_similarity_pairs(embeddings)
+
+umap_2d_embeddings: pl.DataFrame = make_other_plots.reduce_data_and_add_vis_cols(embeddings, movie_dataset)
 
 # randomly sorted titles for
 # user to select from
@@ -107,10 +109,39 @@ def other_plots():
        html_template = file.read()
 
     # List of Plotly Figure objects
-    plotly_figs = make_other_plots.make_all_visualizations(embeddings, movie_dataset)  
+    plotly_figs = make_other_plots.make_all_visualizations(umap_2d_embeddings)  
     figs_json = [json.dumps(fig, cls=PlotlyJSONEncoder) for fig in plotly_figs]
 
     return render_template_string(html_template, figs=figs_json)
+
+@app.route('/get_genres')
+def get_genres():
+    # "embeddings" and "movie_dataset" are already loaded above
+    # Collect all unique genres from the dataset 
+    #    (or from emblow, if that’s required)
+    unique_genres = (
+        movie_dataset.lazy()
+        .select(pl.col("genre").str.split(",").flatten())
+        .unique()
+        .collect()
+        ["genre"]
+        .to_list()
+    )
+    # Return as JSON array
+    return jsonify(unique_genres)
+
+@app.route('/update_genre_plot', methods=['POST'])
+def update_genre_plot():
+    data = request.get_json()
+    selected_genre = data.get('genre')
+
+    # Generate the updated figure
+    # Re-run some portion of make_other_plots or just call genre_scatter_plot
+    # But note that genre_scatter_plot picks a random focus from the splitted genres.
+    # Let’s make a small refactor to accept `focus` from user:
+    updated_fig = make_other_plots.genre_scatter_plot(umap_2d_embeddings, selected_genre)
+
+    return jsonify(json.dumps(updated_fig, cls=PlotlyJSONEncoder))
 
 if __name__ == '__main__':
     app.run(debug=True)

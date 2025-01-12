@@ -50,11 +50,8 @@ franchises = [
 ]
 
 def make_all_visualizations(
-    embeddings,
-    movie_dataset
+    emblow: pl.DataFrame
 ) -> None:
-    # embeddings low dimension
-    emblow = reduce_data_and_add_vis_cols(embeddings, movie_dataset)
     try:
         return [
             franchise_scatter_plot(emblow),
@@ -81,10 +78,7 @@ def franchise_scatter_plot(emblow: pl.DataFrame):
     )
     return fig
 
-def genre_scatter_plot(emblow: pl.DataFrame) -> None:
-    focus = emblow.sample(1)[0, "genre"].split(",")
-    focus = focus[random.randint(0, len(focus))]
-    print(focus)
+def genre_scatter_plot(emblow: pl.DataFrame, focus: str = "Comedy") -> None:
 
     fig = px.scatter(
         emblow.with_columns(
@@ -181,12 +175,12 @@ def reduce_data_and_add_vis_cols(
                 ]), 
                 return_dtype=pl.String)
         )
-    ).collect()
+    )
 
     # for plotting
     # only display one label per franchise
     indexed_unique_labels = (
-        emblow.lazy().with_columns(
+        emblow.with_columns(
             # label the franchise as text
             franchise_label = pl.when(pl.col("Franchise") != ".No sequels included")
                 .then(pl.col("Franchise"))
@@ -199,7 +193,7 @@ def reduce_data_and_add_vis_cols(
     )
     # join back just the first label for each franchise
     emblow = (
-        emblow.lazy().join(
+        emblow.join(
             indexed_unique_labels,
             on = "index",
             how = "left",
@@ -215,19 +209,18 @@ def reduce_data_and_add_vis_cols(
             (
                 pl.col("genre").str.to_lowercase().str.contains(focus.lower(), literal=True)
                     .alias(focus)
-                for focus in emblow.select(pl.col("genre").str.split(",").flatten()).unique()["genre"]
+                for focus in emblow.select(pl.col("genre").str.split(",").flatten()).unique().collect()["genre"]
                 if len(focus or "") > 0
             )
         )
+    # execute the query plan
     ).collect()
 
     return emblow
 
 
 if __name__ == "__main__":
-    pl_cfg = pl.Config()
-    pl_cfg.set_tbl_rows(2000)
-    pl_cfg.set_tbl_cols(1000)
+    
     movie_dataset = (
         pl.scan_parquet("data/out/movie-script-dataset.parquet")
         .with_columns( script_length = pl.col("script").str.len_chars() )
@@ -236,5 +229,7 @@ if __name__ == "__main__":
     )
     
     embeddings = torch.load("data/out/scripts-embedded.pt", weights_only=True)
-    
-    make_all_visualizations(embeddings, movie_dataset)
+    # embeddings low dimension
+    emblow = reduce_data_and_add_vis_cols(embeddings, movie_dataset)
+    all_vis = make_all_visualizations(emblow)
+    [figure.show() for figure in all_vis]
