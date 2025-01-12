@@ -31,6 +31,15 @@ umap_2d_embeddings: pl.DataFrame = make_other_plots.reduce_data_and_add_vis_cols
 titles_list = movie_dataset.select(pl.col("movie_title").shuffle())\
     ["movie_title"].to_list()
 movie_titles = [{"id": t, "text": t} for t in titles_list]
+genres_list = (
+    movie_dataset.lazy()
+    .select(pl.col("genre").str.split(",").flatten())
+    .unique()
+    .collect()
+    ["genre"]
+    .to_list()
+)
+genres = [{"id": g, "text": g} for g in genres_list]
 
 # currently not variable
 metric = "Distance"
@@ -111,24 +120,9 @@ def other_plots():
     # List of Plotly Figure objects
     plotly_figs = make_other_plots.make_all_visualizations(umap_2d_embeddings)  
     figs_json = [json.dumps(fig, cls=PlotlyJSONEncoder) for fig in plotly_figs]
+    genres_json = json.dumps(genres)
 
-    return render_template_string(html_template, figs=figs_json)
-
-@app.route('/get_genres')
-def get_genres():
-    # "embeddings" and "movie_dataset" are already loaded above
-    # Collect all unique genres from the dataset 
-    #    (or from emblow, if that’s required)
-    unique_genres = (
-        movie_dataset.lazy()
-        .select(pl.col("genre").str.split(",").flatten())
-        .unique()
-        .collect()
-        ["genre"]
-        .to_list()
-    )
-    # Return as JSON array
-    return jsonify(unique_genres)
+    return render_template_string(html_template, figs=figs_json, genres=genres_json)
 
 @app.route('/update_genre_plot', methods=['POST'])
 def update_genre_plot():

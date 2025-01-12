@@ -97,68 +97,61 @@
         <script>
             // list of JSON-encoded Plotly figure objects
             var figs = {{ figs | safe }};
-    
-            $(document).ready(function() {
-                // Populate the original (static) plots
-                initOriginalPlots();
-    
-                // Load the available genres
+            // list of genres => must be an array of {id: '...', text: '...'}
+            var genreData = {{ genres | safe }};
+      
+            // Run everything AFTER document is ready
+            $(document).ready(function () {
+              // Initialize the select2 element
+              $("#genre-select").select2({
+                placeholder: "Select a genre",
+                data: genreData,      // This attaches your local data
+                allowClear: true,     // Optional: let user clear selection
+                minimumInputLength: 0 // Show search results even if user hasn't typed
+                // The default filter in Select2 already does partial match on 'text'.
+                // So you typically do NOT need a custom matcher function.
+              });
+      
+              // Default to "Comedy" if it exists
+              let comedyObj = genreData.find((item) => item.id === "Comedy");
+              if (comedyObj) {
+                $("#genre-select").val(comedyObj.id).trigger("change");
+              }
+      
+              // Plot everything initially
+              initOriginalPlots();
+      
+              // Listen for changes in the dropdown -> update the genre-based plot
+              $("#genre-select").on("change", function () {
+                const selectedGenre = $(this).val();
+                if (!selectedGenre) return;
+      
+                // Call /update_genre_plot
                 $.ajax({
-                    url: "/get_genres",
-                    type: "GET",
-                    success: function(genres) {
-                        // genres is an array like ["Action","Comedy","Drama","Sci-Fi",...]
-                        let genreData = genres.map(function(g) {
-                            return { id: g, text: g };
-                        });
-                        $("#genre-select").select2({
-                            placeholder: "Select a genre",
-                            data: genreData
-                        });
-                        
-                        let comedyObj = genreData.find(item => item.id === "Comedy");
-                        if (comedyObj) {
-                            $("#genre-select").val(comedyObj.id).trigger("change");
-                        }
-
-                    }
+                  url: "/update_genre_plot",
+                  type: "POST",
+                  contentType: "application/json",
+                  data: JSON.stringify({ genre: selectedGenre }),
+                  success: function (updatedFigJson) {
+                    // updatedFigJson is a string, parse it
+                    let updatedFig = JSON.parse(updatedFigJson);
+      
+                    // "genre" is displayed on plot2
+                    Plotly.newPlot("plot2", updatedFig.data, updatedFig.layout);
+                  },
                 });
-    
-                // Listen for changes in the dropdown -> update the genre-based plot
-                $("#genre-select").on("change", function() {
-                    const selectedGenre = $(this).val();
-                    if (!selectedGenre) return;
-    
-                    // Call /update_genre_plot
-                    $.ajax({
-                        url: "/update_genre_plot",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify({ "genre": selectedGenre }),
-                        success: function(updatedFigJson) {
-                            // updatedFigJson is a string, so parse it
-                            let updatedFig = JSON.parse(updatedFigJson);
-    
-                            // genre is plot2
-                            Plotly.newPlot("plot2", updatedFig.data, updatedFig.layout);
-                        }
-                    });
-                });
+              });
             });
-    
-    
+      
             function initOriginalPlots() {
-                // figs is a list of four Plotly figure objects in JSON-string form
-                let parsedFig1 = JSON.parse(figs[0]);
-                let parsedFig2 = JSON.parse(figs[1]);
-                let parsedFig3 = JSON.parse(figs[2]);
-                // If you only have 3 returned from make_other_plots, adapt accordingly:
-                // let parsedFig4 = JSON.parse(figs[3]);  // if 4 figs exist
-    
-                Plotly.newPlot("plot1", parsedFig1.data, parsedFig1.layout);
-                Plotly.newPlot("plot2", parsedFig2.data, parsedFig2.layout);
-                Plotly.newPlot("plot3", parsedFig3.data, parsedFig3.layout);
-                // Plotly.newPlot("plot4", parsedFig4.data, parsedFig4.layout);
+              // figs is a list of three Plotly figure JSON strings
+              let parsedFig1 = JSON.parse(figs[0]);
+              let parsedFig2 = JSON.parse(figs[1]);
+              let parsedFig3 = JSON.parse(figs[2]);
+      
+              Plotly.newPlot("plot1", parsedFig1.data, parsedFig1.layout);
+              Plotly.newPlot("plot2", parsedFig2.data, parsedFig2.layout);
+              Plotly.newPlot("plot3", parsedFig3.data, parsedFig3.layout);
             }
         </script>
     </body>
