@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Movie Script Embedded Vector Similarity</title>
+        <title>2-D UMAP of Movie Script Embedded Vectors</title>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
@@ -60,7 +60,9 @@
             }
             .search-section {
                 margin: 50px auto;
-                text-align: center;
+                text-align: left;
+                margin-left: 150px;
+                margin-bottom: 5px;
             }
         </style>
     </head>
@@ -69,15 +71,14 @@
         <div class="sidebar">
             <h3>Navigation</h3>
             <a href="/">Home</a>
-            <a href="/other_plots">Other Plots</a>
+            <a href="/umap_plots">UMAP Plots</a>
         </div>
         
         <!-- Main Content Area -->
         <div class="content">
-            <h1>Movie Script Embedded Vector Similarity</h1>
+            <h1>2-D UMAP <br> of Movie Script Embedded Vector</h1>
             <!-- Plot containers -->
             <div class="plot-container">
-                <h2>Plot 1: Placeholder Title</h2>
                 <div id="plot1"></div>
             </div>
             <div class="search-section" >
@@ -85,11 +86,9 @@
                 <select id="genre-select" style="width:300px;"></select>
             </div>
             <div class="plot-container">
-                <h2>Plot 2: Placeholder Title</h2>
                 <div id="plot2"></div>
             </div>
             <div class="plot-container">
-                <h2>Plot 3: Placeholder Title</h2>
                 <div id="plot3"></div>
             </div>
         </div>

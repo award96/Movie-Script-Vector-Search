@@ -72,9 +72,19 @@ def franchise_scatter_plot(emblow: pl.DataFrame):
         text='franchise_label',
         hover_name = "movie_title",
         hover_data =["year", "genre", "script_length"],
-        title = "Low Dimensional Visualization of Movie Script Embeddings",
+        title = "UMAP of Embedded Scripts by Franchise",
         width = int(1.25e3),
         height = int(0.65e3)
+    )
+    fig.update_layout(
+        font=dict(
+            family='Arial Black', 
+            size=14
+        ),
+        title_font = dict(
+            family='Arial Black', 
+            size=24
+        )
     )
     return fig
 
@@ -98,7 +108,7 @@ def genre_scatter_plot(emblow: pl.DataFrame, focus: str = "Comedy") -> None:
         # text = f'{focus}_label',
         hover_name = "movie_title",
         hover_data =["year", "genre", focus],
-        title = "Low Dimensional Visualization of Movie Script Embeddings",
+        title = "UMAP of Embedded Scripts by Genre",
         width = int(1.25e3),
         height = int(0.65e3)
     )
@@ -126,7 +136,7 @@ def selected_labels_scatter_plot(
         text = "selected_labels",
         hover_name = "movie_title",
         hover_data =["year", "genre", "script_length"],
-        title = "Low Dimensional Visualization of Movie Script Embeddings",
+        title = "UMAP of Embedded Scripts. Selected movies labeled",
         width = int(1.25e3),
         height = int(0.65e3)
     )
@@ -134,13 +144,6 @@ def selected_labels_scatter_plot(
         range=[-17,-11.5]
     )
 
-    fig.update_layout(
-        font=dict(
-            #family="Courier New, monospace",
-            size=14,  # Set the font size here
-            #color="RebeccaPurple"
-        )
-    )
     fig.update_layout(
         font=dict(
             family='Arial Black', 
