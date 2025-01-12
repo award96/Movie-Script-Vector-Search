@@ -102,17 +102,10 @@ def visualize():
 
 @app.route('/other_plots')
 def other_plots():
-    """Simple placeholder route for other plots."""
-    return """
-    <html>
-    <head><title>Other Plots</title></head>
-    <body>
-        <h1>Other Plots Page</h1>
-        <p>This is where you can add or showcase different plots.</p>
-        <a href="/">Return to Home</a>
-    </body>
-    </html>
-    """
+    with open('html/other_plots.html', 'r') as file:
+       html_template = file.read()
+
+    return render_template_string(html_template) # , movie_titles_json=movie_titles_json)
 
 if __name__ == '__main__':
     app.run(debug=True)
