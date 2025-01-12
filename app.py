@@ -35,12 +35,12 @@ genres_list = (
     movie_dataset.lazy()
     .select(pl.col("genre").str.split(",").flatten())
     .unique()
+    .sort(pl.col("genre"))
     .collect()
     ["genre"]
     .to_list()
 )
 genres = [{"id": g, "text": g} for g in genres_list]
-
 # currently not variable
 metric = "Distance"
 
@@ -120,9 +120,8 @@ def other_plots():
     # List of Plotly Figure objects
     plotly_figs = make_other_plots.make_all_visualizations(umap_2d_embeddings)  
     figs_json = [json.dumps(fig, cls=PlotlyJSONEncoder) for fig in plotly_figs]
-    genres_json = json.dumps(genres)
 
-    return render_template_string(html_template, figs=figs_json, genres=genres_json)
+    return render_template_string(html_template, figs=figs_json, genres=json.dumps(genres))
 
 @app.route('/update_genre_plot', methods=['POST'])
 def update_genre_plot():

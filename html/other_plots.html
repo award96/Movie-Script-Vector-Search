@@ -99,18 +99,18 @@
             var figs = {{ figs | safe }};
             // list of genres => must be an array of {id: '...', text: '...'}
             var genreData = {{ genres | safe }};
-      
+            console.log("Genre Data:\n", genreData);
             // Run everything AFTER document is ready
             $(document).ready(function () {
               // Initialize the select2 element
-              $("#genre-select").select2({
-                placeholder: "Select a genre",
-                data: genreData,      // This attaches your local data
-                allowClear: true,     // Optional: let user clear selection
-                minimumInputLength: 0 // Show search results even if user hasn't typed
-                // The default filter in Select2 already does partial match on 'text'.
-                // So you typically do NOT need a custom matcher function.
-              });
+                $("#genre-select").select2({
+                    placeholder: "Select a genre",
+                    data: genreData,
+                    allowClear: true,
+                    minimumResultsForSearch: Infinity // Disables the search bar
+                    // I spent a couple hours on the search bar but couldn't get it to work
+                });
+
       
               // Default to "Comedy" if it exists
               let comedyObj = genreData.find((item) => item.id === "Comedy");
@@ -123,7 +123,7 @@
       
               // Listen for changes in the dropdown -> update the genre-based plot
               $("#genre-select").on("change", function () {
-                const selectedGenre = $(this).val();
+                const selectedGenre = $('#genre-select').val();
                 if (!selectedGenre) return;
       
                 // Call /update_genre_plot
