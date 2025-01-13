@@ -1,6 +1,5 @@
+import os
 import joblib
-import traceback
-import random
 import plotly.express as px
 import polars as pl
 import torch
@@ -269,4 +268,10 @@ if __name__ == "__main__":
     # embeddings low dimension
     emblow = reduce_data_and_add_vis_cols(embeddings, movie_dataset)
     all_vis = make_all_visualizations(emblow)
-    [figure.show() for figure in all_vis]
+    
+    dirout = "data/out/plots"
+    os.makedirs(dirout, exist_ok=True)
+    [
+        figure.write_image(dirout + f"/plot_{i}.png") 
+        for i, figure in enumerate(all_vis)
+    ]
