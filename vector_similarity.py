@@ -191,14 +191,9 @@ def display_similarity_correlation(
     corr = data.select(pl.col(columns)).corr()
     display(corr)
 
-def load_embedding_tensors() -> torch.Tensor:
-    return torch.load("data/out/scripts-embedded.pt", weights_only=True)
-def load_movie_dataset() -> pl.DataFrame:
-    return pl.read_parquet("data/out/movie-script-dataset.parquet")
-
 if __name__ == "__main__":
-    embeddings = load_embedding_tensors()
-    movie_data = load_movie_dataset()
+    embeddings = torch.load("data/out/scripts-embedded.pt", weights_only=True)
+    movie_data = pl.read_parquet("data/out/movie-script-dataset.parquet")
     similarity_name_value_pairs = calculate_all_similarity_pairs(embeddings)
     rnd_movie = movie_data.sample(1)[0, "movie_title"]
     print(rnd_movie)

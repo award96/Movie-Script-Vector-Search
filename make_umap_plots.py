@@ -5,8 +5,9 @@ import plotly.express as px
 import polars as pl
 import pandas as pd
 import torch
-
+# UMAP trained reducer
 __reducer = joblib.load("data/out/UMAP-reducer.joblib")
+# subset of movies to label on plot
 __label_movies = [
     '12 Angry Men',
     'Aladdin',
@@ -38,7 +39,9 @@ __label_movies = [
     'Wall-E',
     'Up'
 ]
-franchises = [
+# all franchises in dataset
+# with more than one entry
+__franchises = [
     "Bourne",
     "Alien",
     "Batman",
@@ -51,7 +54,7 @@ franchises = [
 
 def make_all_visualizations(
     emblow: pl.DataFrame
-) -> None:
+) -> list:
     try:
         return [
             franchise_scatter_plot(emblow),
@@ -160,10 +163,24 @@ def reduce_data_and_add_vis_cols(
     embeddings: torch.Tensor, 
     movie_dataset: pl.DataFrame
 ) -> pl.DataFrame:
+    """Use the reducer to transform the embeddings into a 2-D representation.
+    Then join those two dimensions to the movie data. From there, add columns
+    that will be used to add visualizations to the plots.
+
+    Args:
+        embeddings (torch.Tensor): Movie scripts embedded as vectors of shape 
+            (n_movies, hidden_state_size).
+        movie_dataset (pl.DataFrame): Movie dataset with titles, genres, etc.
+            Has the same index as embeddings.
+    Returns:
+        pl.DataFrame of movie titles along with their 2-D representations, and
+        columns to be used in plotting.
+    """
     emblow = pd.DataFrame(__reducer.transform(embeddings), columns = ['x', 'y'])
     emblow = (
         pl.from_pandas(emblow).lazy()
         .with_row_index()
+        # join with movie dataset on index
         .join(movie_dataset.lazy(), "index", "inner")
         .with_columns(
             # label some of the movies on the plot
@@ -173,8 +190,14 @@ def reduce_data_and_add_vis_cols(
             # assign franchise
             Franchise = pl.col("movie_title").str.replace("The Dark Knight", "Batman")
             .map_elements(
-                lambda x: max([
-                    f if (f in x) else ".No sequels included" for f in franchises
+                lambda movie_title: max([
+                    # max of this is going to be
+                    # the franchise name if any of the franchise
+                    # names are a substring of the actual title.
+                    # otherwise the max is going to be ".No sequels included"
+                    franchise_name if (franchise_name in movie_title) 
+                    else ".No sequels included" 
+                        for franchise_name in __franchises
                 ]), 
                 return_dtype=pl.String)
         )
@@ -209,10 +232,16 @@ def reduce_data_and_add_vis_cols(
             .otherwise(pl.lit(1))
         )
         .with_columns(
+            # make a boolean indicator mask for each genre.
+            # genre is a multilabel, so a movie can be multiple genres
             (
+                # boolean
                 pl.col("genre").str.to_lowercase().str.contains(focus.lower(), literal=True)
                     .alias(focus)
+                # for every unique genre
+                # in the multilabel column
                 for focus in emblow.select(pl.col("genre").str.split(",").flatten()).unique().collect()["genre"]
+                # excluding nulls and empty strings
                 if len(focus or "") > 0
             )
         )
