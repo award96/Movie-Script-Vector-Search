@@ -3,7 +3,6 @@ import traceback
 import random
 import plotly.express as px
 import polars as pl
-import pandas as pd
 import torch
 # UMAP trained reducer
 __reducer = joblib.load("data/out/UMAP-reducer.joblib")
@@ -176,9 +175,15 @@ def reduce_data_and_add_vis_cols(
         pl.DataFrame of movie titles along with their 2-D representations, and
         columns to be used in plotting.
     """
-    emblow = pd.DataFrame(__reducer.transform(embeddings), columns = ['x', 'y'])
+    # (110, 2)
+    two_dimensional_embeddings = __reducer.transform(embeddings)
     emblow = (
-        pl.from_pandas(emblow).lazy()
+        pl.LazyFrame(
+            {
+                'x': two_dimensional_embeddings[:,0],
+                'y': two_dimensional_embeddings[:,1],
+            }
+        )
         .with_row_index()
         # join with movie dataset on index
         .join(movie_dataset.lazy(), "index", "inner")
