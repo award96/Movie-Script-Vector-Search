@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template_string, request, jsonify
 import polars as pl
 import plotly.express as px
@@ -49,21 +50,31 @@ genres = [{"id": g, "text": g} for g in genres_list]
 # metric for main plot
 # currently not variable
 metric = "Distance"
-
+IMAGE_FOLDER = os.path.join('data', 'out', 'plots')
 # --------------------------
 # Flask Application
 # --------------------------
 app = Flask(__name__)
-
+app.config['UPLOAD_FOLDER'] = IMAGE_FOLDER
+print()
+print()
+print()
+print('-'*50*3)
 """
 Homepage
 """
 @app.route('/')
 def index():
     movie_titles_json = json.dumps(movie_titles)
-    with open('html/index.html', 'r') as file:
+    with open('static/templates/index.html', 'r') as file:
        html_template = file.read()
-    return render_template_string(html_template, movie_titles_json=movie_titles_json)
+    project_diagram_png_path = os.path.join(app.config['UPLOAD_FOLDER'], 'Project-Diagram.png')
+    print(project_diagram_png_path)
+    return render_template_string(
+        html_template, 
+        movie_titles_json=movie_titles_json, 
+        project_diagram=project_diagram_png_path
+    )
 
 """
 Generate plots for homepage '/' route
@@ -125,7 +136,7 @@ UMAP 2D Plots
 """
 @app.route('/umap_plots')
 def umap_plots():
-    with open('html/umap_plots.html', 'r') as file:
+    with open('static/templates/umap_plots.html', 'r') as file:
        html_template = file.read()
 
     # List of Plotly Figure objects

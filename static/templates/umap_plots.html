@@ -63,15 +63,47 @@
                 text-align: left;
                 margin-left: 150px;
                 margin-bottom: 5px;
-            }
+            }nav {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    gap: 20px; /* Space between items */
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    max-width: 300px; /* Optional: limit the width of the menu */
+    margin: 20px auto; /* Center the nav in the viewport */
+  }
+  nav a {
+    text-decoration: none;
+    font-size: 1.5em; /* Make the text larger */
+    color: #007bff;
+    font-weight: bold;
+    padding: 15px 20px;
+    border-radius: 8px;
+    width: 100%; /* Make links stretch horizontally */
+    text-align: center; /* Center text inside the link */
+    transition: all 0.3s ease;
+  }
+  nav a:hover {
+    background-color: #007bff;
+    color: white;
+    transform: scale(1.05);
+  }
+  nav a i {
+    margin-right: 10px;
+  }
         </style>
     </head>
     <body>
         <!-- Sidebar -->
         <div class="sidebar">
             <h3>Navigation</h3>
-            <a href="/">Home</a>
-            <a href="/umap_plots">UMAP Plots</a>
+                <nav>
+  <a href="/"><i class="fa fa-home"></i>Home</a>
+  <a href="/umap_plots"><i class="fa fa-chart-line"></i>UMAP Plots</a>
+</nav>
         </div>
         
         <!-- Main Content Area -->
