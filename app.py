@@ -4,7 +4,7 @@ import polars as pl
 import plotly.express as px
 from plotly.utils import PlotlyJSONEncoder
 import torch
-import vector_similarity
+import vector_search
 import make_umap_plots
 import json
 
@@ -23,7 +23,7 @@ embeddings: torch.Tensor = torch.load("data/out/scripts-embedded.pt", weights_on
 # for Distance, Dotproduct, and Cosine
 # {"Distance": torch.Tensor of shape (n_movies, n_movies) ...}
 similarity_name_value_pairs: dict[torch.Tensor] = \
-    vector_similarity.calculate_all_similarity_pairs(embeddings)
+    vector_search.calculate_all_similarity_pairs(embeddings)
 
 # load UMAP reducer, reduce embeddings to 2D, join to movie dataset, add columns for visualization
 umap_2d_embeddings: pl.DataFrame = make_umap_plots.reduce_data_and_add_vis_cols(embeddings, movie_dataset)
@@ -89,7 +89,7 @@ def make_plots():
         return jsonify({"error": "No movie title provided"}), 400
 
     # Get all movies sorted by distance
-    neighbors_df = vector_similarity.return_matches(
+    neighbors_df = vector_search.return_matches(
         movie_title, 
         similarity_name_value_pairs, 
         movie_dataset, 

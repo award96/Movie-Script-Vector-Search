@@ -2,6 +2,47 @@ import polars as pl
 import torch
 from IPython.display import display
 
+def calculate_all_similarity_pairs(
+    embeddings: torch.Tensor
+) -> dict[torch.Tensor]:
+    """For the embeddings tensor of shape (n_movies, hidden_state_size)
+    calculate the dotproduct, cosine similarity, and distance between the
+    all hidden states.
+
+    Args:
+        embeddings (torch.Tensor): The script embeddings of shape 
+            (n_movies, hidden_state_size).
+    Returns:
+        dict where the keys are the names of metrics, and the values
+        are torch tensors of shape (n_movies, hidden_state_size).
+    """
+    ## Dot Product
+    # (n_movies, hidden_state_size )
+    dot = torch.tensordot(embeddings, embeddings, dims=([1], [1]))
+    
+    ## Cosine
+    cos_sim_layer = torch.nn.CosineSimilarity(dim=2)
+    # create square tensor for n_movies squared cosine comparisons
+    # (n_movies, n_movies, hidden_state_size)
+    embeddings_duplicated_over_0 = embeddings.unsqueeze(1).expand(-1, embeddings.shape[0], -1)
+    embeddings_duplicated_over_1 = embeddings.unsqueeze(0).expand(embeddings.shape[0], -1, -1)
+    # for reference:
+    # embeddings_duplicated_over_0[specific_index, any_index, :] == embeddings[specific_index, :]
+    # embeddings_duplicated_over_1[any_index, specific_index, :] == embeddings[specific_index, :]
+
+    # (n_movies, hidden_state_size )
+    cos = cos_sim_layer(embeddings_duplicated_over_0, embeddings_duplicated_over_1)
+
+    ## Distance (KNN)
+    # (n_movies, hidden_state_size )
+    distances = torch.cdist(embeddings, embeddings).squeeze(0)
+    
+    return { # all same shape
+        "Dotproduct": dot,
+        "Cosine": cos,
+        "Distance": distances
+    }
+
 def return_matches(
     movie_title: str,
     similarity_name_value_pairs: dict, # dict mapping "Distance": torch.Tensor 
@@ -68,47 +109,6 @@ def calculate_similarity_pairs_for_index(
     distances = torch.cdist(embeddings[idx].unsqueeze(0), embeddings).squeeze(0)
 
     return { # all same length
-        "Dotproduct": dot,
-        "Cosine": cos,
-        "Distance": distances
-    }
-
-def calculate_all_similarity_pairs(
-    embeddings: torch.Tensor
-) -> dict[torch.Tensor]:
-    """For the embeddings tensor of shape (n_movies, hidden_state_size)
-    calculate the dotproduct, cosine similarity, and distance between the
-    all hidden states.
-
-    Args:
-        embeddings (torch.Tensor): The script embeddings of shape 
-            (n_movies, hidden_state_size).
-    Returns:
-        dict where the keys are the names of metrics, and the values
-        are torch tensors of shape (n_movies, hidden_state_size).
-    """
-    ## Dot Product
-    # (n_movies, hidden_state_size )
-    dot = torch.tensordot(embeddings, embeddings, dims=([1], [1]))
-    
-    ## Cosine
-    cos_sim_layer = torch.nn.CosineSimilarity(dim=2)
-    # create square tensor for n_movies squared cosine comparisons
-    # (n_movies, n_movies, hidden_state_size)
-    embeddings_duplicated_over_0 = embeddings.unsqueeze(1).expand(-1, embeddings.shape[0], -1)
-    embeddings_duplicated_over_1 = embeddings.unsqueeze(0).expand(embeddings.shape[0], -1, -1)
-    # for reference:
-    # embeddings_duplicated_over_0[specific_index, any_index, :] == embeddings[specific_index, :]
-    # embeddings_duplicated_over_1[any_index, specific_index, :] == embeddings[specific_index, :]
-
-    # (n_movies, hidden_state_size )
-    cos = cos_sim_layer(embeddings_duplicated_over_0, embeddings_duplicated_over_1)
-
-    ## Distance (KNN)
-    # (n_movies, hidden_state_size )
-    distances = torch.cdist(embeddings, embeddings).squeeze(0)
-    
-    return { # all same shape
         "Dotproduct": dot,
         "Cosine": cos,
         "Distance": distances

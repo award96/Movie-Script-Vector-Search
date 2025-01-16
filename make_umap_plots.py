@@ -269,9 +269,9 @@ if __name__ == "__main__":
     emblow = reduce_data_and_add_vis_cols(embeddings, movie_dataset)
     all_vis = make_all_visualizations(emblow)
     
-    dirout = "data/out/plots"
+    dirout = "static/images/"
     os.makedirs(dirout, exist_ok=True)
     [
-        figure.write_image(dirout + f"/plot_{i}.png") 
+        figure.write_image(os.path.join(dirout, f"plot_{i}.png")) 
         for i, figure in enumerate(all_vis)
     ]
