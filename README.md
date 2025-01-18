@@ -1,5 +1,5 @@
-# Vector Search for Visualizing Movie Script Relationships
-## Interactive Flask App Visualizations of 3 Combined Movie Datasets
+# [Vector Search for Visualizing Movie Script Relationships](tinyurl.com/movie-vector-search)
+## [Interactive Flask App Visualizations of 3 Combined Movie Datasets](tinyurl.com/movie-vector-search)
 
 ![alt text](static/images/plot_0.png "UMAP of Embedded Scripts by Franchise")
 
@@ -45,3 +45,5 @@ The visualization titled "Nearest Neighbors to Fight Club" depicts the nearest n
 **Notes**
 
 Feel free to reach out at linkedin.com/in/anders-ward/
+
+[tinyurl.com/movie-vector-search](tinyurl.com/movie-vector-search)
