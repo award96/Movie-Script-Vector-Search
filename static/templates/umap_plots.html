@@ -14,7 +14,7 @@
             }
             .sidebar {
                 background-color: #f8f8f8;
-                width: 220px;
+                width: 11.5%;
                 height: 100vh; /* full viewport height */
                 padding: 20px;
                 float: left;
@@ -26,10 +26,11 @@
             /* Make links look like nice buttons */
             .sidebar a {
                 display: block;
-                padding: 10px 15px;
+                font-size: 1.3em;
+                padding: 12px 15px;
                 margin: 8px 0;
                 text-decoration: none;
-                color: #333;
+                color: #007bff; /* Bootstrap “primary” blue */
                 background-color: #e6e6e6;
                 border-radius: 4px;
                 transition: background-color 0.2s ease;
@@ -37,16 +38,17 @@
             }
             .sidebar a:hover {
                 background-color: #ccc;
+                color: #000;
             }
-
+            /* Main content */
             .content {
-                margin-left: 240px; /* leave space for the sidebar */
-                padding: 20px;
+              margin-left: 12%; /* leave space for the sidebar */
+              padding: 20px;
             }
             h1 {
                 text-align: center;
                 margin-bottom: 30px; /* space below title */
-                margin-top: 20px; /* extra space above title */
+                margin-top: 20px;    /* extra space above title */
             }
             .plot-container {
                 margin: 0 auto;
@@ -63,48 +65,23 @@
                 text-align: left;
                 margin-left: 150px;
                 margin-bottom: 5px;
-            }nav {
-    display: flex;
-    flex-direction: column; /* Stack items vertically */
-    align-items: center; /* Center items horizontally */
-    gap: 20px; /* Space between items */
-    padding: 20px;
-    background-color: #f8f9fa;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    max-width: 300px; /* Optional: limit the width of the menu */
-    margin: 20px auto; /* Center the nav in the viewport */
-  }
-  nav a {
-    text-decoration: none;
-    font-size: 1.5em; /* Make the text larger */
-    color: #007bff;
-    font-weight: bold;
-    padding: 15px 20px;
-    border-radius: 8px;
-    width: 100%; /* Make links stretch horizontally */
-    text-align: center; /* Center text inside the link */
-    transition: all 0.3s ease;
-  }
-  nav a:hover {
-    background-color: #007bff;
-    color: white;
-    transform: scale(1.05);
-  }
-  nav a i {
-    margin-right: 10px;
-  }
+            }
         </style>
     </head>
     <body>
         <!-- Sidebar -->
         <div class="sidebar">
-            <h3>Navigation</h3>
-                <nav>
-  <a href="/"><i class="fa fa-home"></i>Home</a>
-  <a href="/umap_plots"><i class="fa fa-chart-line"></i>UMAP Plots</a>
-</nav>
-        </div>
+          <h3>Navigation</h3>
+          <!-- Update icons, text, or links as needed -->
+          <a href="/">
+              <i class="fa fa-home" style="margin-right: 8px;"></i>
+              Home
+          </a>
+          <a href="/umap_plots">
+              <i class="fa fa-chart-line" style="margin-right: 8px;"></i>
+              UMAP Plots
+          </a>
+      </div>
         
         <!-- Main Content Area -->
         <div class="content">
@@ -123,6 +100,17 @@
             <div class="plot-container">
                 <div id="plot3"></div>
             </div>
+        
+        <!-- Footer -->
+        <footer style="background-color: #f8f8f8; padding: 2em; text-align: center; font-family: sans-serif;">
+            <h2 style="margin-bottom: 0.5em;">Contact</h2>
+            <p style="margin: 0.5em 0;">
+              <a href="https://www.linkedin.com/in/anders-ward/" style="color: #333; text-decoration: none;">https://www.linkedin.com/in/anders-ward/</a>
+            </p>
+            <p style="margin: 0.5em 0;">
+              <a href="https://github.com/award96/Movie-Script-Vector-Search" style="color: #333; text-decoration: none;">https://github.com/award96/Movie-Script-Vector-Search</a>
+            </p>
+          </footer>
         </div>
 
         <script>
