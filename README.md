@@ -1,5 +1,5 @@
-# Vector Search for Visualizing Movie Script Relationships
-## Interactive Flask App Visualizations of 3 Combined Movie Datasets
+# [Vector Search for Visualizing Movie Script Relationships](tinyurl.com/movie-vector-search)
+## [Interactive Flask App Visualizations of 3 Combined Movie Datasets](tinyurl.com/movie-vector-search)
 
 ![alt text](static/images/plot_0.png "UMAP of Embedded Scripts by Franchise")
 
@@ -33,15 +33,18 @@ After cleaning the scripts using regex, we feed them into [`bge-large-en-v1.5`](
 ## UMAP
 [UMAP](https://umap-learn.readthedocs.io/en/latest/) is a dimension reduction technique that learns a low dimensional projection which preserves equivalent fuzzy topological structure. This is a non-linear alternative to PCA, and is most comparable to t-SNE.
 
-We use it to project the 1024 dimensional embeddings town to 2 dimensions so we can plot them and confirm that similar movies are embedded into similar vectors.
+We use it to project the 1024 dimensional embeddings down to 2 dimensions so we can plot them and confirm that similar movies are embedded into similar vectors.
+<br />
 <img src="static/images/umap-picture.png" alt="UMAP" width="300"/>
 
 
 ## Visualizations
-Visualizations are made with plotly express and hosted on a flask app. 
+Visualizations are made with plotly express and hosted on a [flask app](tinyurl.com/movie-vector-search). 
 
 The visualization titled "Nearest Neighbors to Fight Club" depicts the nearest neighbors (KNN) to a given movie in terms of the embedded vector distance for the movie script. The y-axis & size are the dot product, which was not as strongly correlated to distance (KNN) as I had expected. The color is the cosine similarity, which is extremely correlated to distance, likely because the embeddings have values from the standard normal distribution.
 
 **Notes**
 
 Feel free to reach out at linkedin.com/in/anders-ward/
+
+[tinyurl.com/movie-vector-search](tinyurl.com/movie-vector-search)
