@@ -1,5 +1,5 @@
-# [Vector Search for Visualizing Movie Script Relationships](tinyurl.com/movie-vector-search)
-## [Interactive Flask App Visualizations of 3 Combined Movie Datasets](tinyurl.com/movie-vector-search)
+# [Vector Search for Visualizing Movie Script Relationships](https://tinyurl.com/movie-vector-search)
+## [Interactive Flask App Visualizations of 3 Combined Movie Datasets](https://tinyurl.com/movie-vector-search)
 
 ![alt text](static/images/plot_0.png "UMAP of Embedded Scripts by Franchise")
 
